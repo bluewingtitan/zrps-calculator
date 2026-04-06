@@ -7,6 +7,7 @@ import {
   defaultCharacter,
   migrateCharacter,
 } from "@/model/character";
+import { readCharacterFile, exportCharacterFile } from "@/model/importExport";
 
 export const useCharactersStore = defineStore("characters", () => {
   // Persisted list of all saved characters
@@ -68,6 +69,22 @@ export const useCharactersStore = defineStore("characters", () => {
     }
   }
 
+  async function importCharacterFromFile(
+    file: File,
+  ): Promise<{ ok: true } | { ok: false; error: string }> {
+    const result = await readCharacterFile(file);
+    if (!result.ok) return result;
+    const migrated = migrateCharacter(cloneCharacter(result.data));
+    // Always assign a fresh UUID so imports never collide with existing characters
+    migrated.id = crypto.randomUUID();
+    characters.value.push(migrated);
+    return { ok: true };
+  }
+
+  function exportCharacter(char: CharacterData): void {
+    exportCharacterFile(char);
+  }
+
   function unload() {
     workingCopy.value = null;
     savedSnapshot.value = "";
@@ -82,6 +99,8 @@ export const useCharactersStore = defineStore("characters", () => {
     discardChanges,
     createCharacter,
     deleteCharacter,
+    importCharacterFromFile,
+    exportCharacter,
     unload,
   };
 });

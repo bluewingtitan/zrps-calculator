@@ -8,12 +8,16 @@ import {
   PhTrash,
   PhUser,
   PhMagnifyingGlass,
+  PhUpload,
+  PhDownload,
 } from "@phosphor-icons/vue";
 
 const router = useRouter();
 const chars = useCharactersStore();
 
 const search = ref("");
+const importError = ref<string | null>(null);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const filteredCharacters = computed(() => {
   const q = search.value.trim().toLowerCase();
@@ -39,6 +43,28 @@ function deleteCharacter(id: string, event: MouseEvent) {
     chars.deleteCharacter(id);
   }
 }
+
+function triggerImport() {
+  importError.value = null;
+  fileInputRef.value?.click();
+}
+
+async function onFileSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!fileInputRef.value) return;
+  fileInputRef.value.value = "";
+  if (!file) return;
+  const result = await chars.importCharacterFromFile(file);
+  if (!result.ok) {
+    importError.value = result.error;
+  }
+}
+
+function exportCharacter(id: string, event: MouseEvent) {
+  event.stopPropagation();
+  const char = chars.characters.find((c) => c.id === id);
+  if (char) chars.exportCharacter(char);
+}
 </script>
 
 <template>
@@ -46,9 +72,39 @@ function deleteCharacter(id: string, event: MouseEvent) {
     <div class="max-w-2xl mx-auto px-4 py-8">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold">Charaktere</h1>
-        <button class="btn btn-primary btn-sm gap-2" @click="createCharacter">
-          <PhPlus :size="16" />
-          Neu
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm gap-2" @click="triggerImport">
+            <PhUpload :size="16" />
+            Import
+          </button>
+          <button class="btn btn-primary btn-sm gap-2" @click="createCharacter">
+            <PhPlus :size="16" />
+            Neu
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden file input for .zrps import -->
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept=".zrps"
+        class="hidden"
+        @change="onFileSelected"
+      />
+
+      <!-- Import error alert -->
+      <div
+        v-if="importError"
+        role="alert"
+        class="alert alert-error alert-sm mb-4 text-sm"
+      >
+        <span>Import fehlgeschlagen: {{ importError }}</span>
+        <button
+          class="btn btn-xs btn-ghost ml-auto"
+          @click="importError = null"
+        >
+          ✕
         </button>
       </div>
 
@@ -115,6 +171,12 @@ function deleteCharacter(id: string, event: MouseEvent) {
                 @click="openCharacter(char.id)"
               >
                 <PhPencilSimple :size="14" />
+              </button>
+              <button
+                class="btn btn-xs btn-ghost btn-circle"
+                @click="exportCharacter(char.id, $event)"
+              >
+                <PhDownload :size="14" />
               </button>
               <button
                 class="btn btn-xs btn-ghost btn-circle text-error"

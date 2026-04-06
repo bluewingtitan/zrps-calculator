@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useModelStore } from "@/stores/model";
 import { PhMinus, PhPlus } from "@phosphor-icons/vue";
 
@@ -41,6 +42,8 @@ function toggleSkill(idx: number) {
   } else {
     skill.currentLevel = 0;
     skill.active = false;
+    // Clear locked costs so re-learning prices are recalculated from scratch
+    skill.lockedLevelCosts = {};
   }
 }
 
@@ -61,12 +64,30 @@ function skillCost(idx: number): number | null {
   if (!skill || skill.currentLevel === 0) return null;
   return store.targetLevelCost(skill, skill.currentLevel, 8);
 }
+
+const totalCp = computed(() =>
+  store.skills.reduce((sum, _skill, idx) => sum + (skillCost(idx) ?? 0), 0),
+);
 </script>
 
 <template>
   <div class="card bg-base-200 shadow">
     <div class="card-body gap-0 p-4">
-      <h2 class="card-title text-base mb-3">Skills</h2>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="card-title text-base">Skills</h2>
+        <span
+          class="text-xs font-semibold"
+          :class="
+            totalCp > 0
+              ? 'text-warning'
+              : totalCp < 0
+                ? 'text-success'
+                : 'text-base-content/30'
+          "
+        >
+          {{ totalCp > 0 ? "+" : "" }}{{ totalCp }}&thinsp;CP
+        </span>
+      </div>
 
       <div class="divide-y divide-base-300">
         <div

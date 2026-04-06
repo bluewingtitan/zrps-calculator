@@ -1,10 +1,27 @@
 <script setup lang="ts">
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useCharactersStore } from "@/stores/characters";
-import { PhPlus, PhPencilSimple, PhTrash, PhUser } from "@phosphor-icons/vue";
+import {
+  PhPlus,
+  PhPencilSimple,
+  PhTrash,
+  PhUser,
+  PhMagnifyingGlass,
+} from "@phosphor-icons/vue";
 
 const router = useRouter();
 const chars = useCharactersStore();
+
+const search = ref("");
+
+const filteredCharacters = computed(() => {
+  const q = search.value.trim().toLowerCase();
+  if (!q) return chars.characters;
+  return chars.characters.filter((c) =>
+    (c.name || "").toLowerCase().includes(q),
+  );
+});
 
 function openCharacter(id: string) {
   chars.loadCharacter(id);
@@ -35,6 +52,17 @@ function deleteCharacter(id: string, event: MouseEvent) {
         </button>
       </div>
 
+      <!-- Search -->
+      <label class="input input-sm w-full mb-4">
+        <PhMagnifyingGlass :size="16" class="text-base-content/40" />
+        <input
+          type="search"
+          v-model="search"
+          placeholder="Suchen…"
+          class="grow"
+        />
+      </label>
+
       <!-- Empty state -->
       <div v-if="chars.characters.length === 0" class="card bg-base-200 shadow">
         <div class="card-body items-center text-center py-12">
@@ -51,8 +79,14 @@ function deleteCharacter(id: string, event: MouseEvent) {
 
       <!-- Character list -->
       <div v-else class="flex flex-col gap-3">
+        <p
+          v-if="filteredCharacters.length === 0"
+          class="text-center text-sm text-base-content/40 py-6"
+        >
+          Kein Charakter gefunden.
+        </p>
         <div
-          v-for="char in chars.characters"
+          v-for="char in filteredCharacters"
           :key="char.id"
           class="card bg-base-200 shadow cursor-pointer hover:bg-base-300 transition-colors"
           @click="openCharacter(char.id)"

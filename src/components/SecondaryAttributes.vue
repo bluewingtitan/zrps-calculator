@@ -8,15 +8,39 @@ const store = useModelStore();
 // Computed base values (before Add delta)
 const hpBase = computed(() => Math.round(store.st * 1.5));
 const fpBase = computed(() => store.ht);
-const bmBase = computed(() => Math.floor((store.ht + store.dx) / 4));
+const bmBase = computed(() => (store.ht + store.dx) / 4);
 const magicBase = computed(() => Math.floor(store.iq * 0.65));
 // WL and PER base = IQ (no extra computation needed)
+
+const totalCp = computed(
+  () =>
+    (store.hpAdd ?? 0) * 2 +
+    (store.willAdd ?? 0) * 5 +
+    (store.perAdd ?? 0) * 5 +
+    (store.fpAdd ?? 0) * 3 +
+    (store.basicMoveAdd ?? 0) * 5 +
+    (store.magicAdd ?? 0) * 10,
+);
 </script>
 
 <template>
   <div class="card bg-base-200 shadow">
     <div class="card-body gap-0 p-4">
-      <h2 class="card-title text-base mb-2">Zusatzattribute</h2>
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="card-title text-base">Zusatzattribute</h2>
+        <span
+          class="text-xs font-semibold"
+          :class="
+            totalCp > 0
+              ? 'text-warning'
+              : totalCp < 0
+                ? 'text-success'
+                : 'text-base-content/30'
+          "
+        >
+          {{ totalCp > 0 ? "+" : "" }}{{ totalCp }}&thinsp;CP
+        </span>
+      </div>
 
       <div class="divide-y divide-base-300">
         <AttrCounter
@@ -60,6 +84,7 @@ const magicBase = computed(() => Math.floor(store.iq * 0.65));
           v-model="store.magicAdd"
           :cpPerStep="10"
           :base="magicBase"
+          :min="0"
         />
       </div>
     </div>

@@ -34,7 +34,7 @@ function handleBack() {
   }
 }
 function confirmSave() {
-  chars.saveCharacter();
+  store.lockAndSave();
   showConfirm.value = false;
   chars.unload();
   router.push({ name: "list" });
@@ -101,7 +101,8 @@ function cancelConfirm() {
           >
             {{ store.usedCp }}&thinsp;/&thinsp;{{ store.availableCp }}
             <span class="font-normal text-xs ml-1">
-              ({{ remaining >= 0 ? "+" : "" }}{{ remaining }})
+              ({{ remaining >= 0 ? "Verbleibend: " : "Zu viel:"
+              }}{{ Math.abs(remaining) }} CP)
             </span>
           </span>
         </div>

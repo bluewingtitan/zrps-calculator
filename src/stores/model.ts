@@ -2,8 +2,12 @@ import { computed } from "vue";
 import { defineStore } from "pinia";
 import { useCharactersStore } from "./characters";
 import type { BoundAttribute, SkillDefinition } from "@/model/character";
+import { WEALTH_LEVELS } from "@/model/character";
 
 export type { BoundAttribute, SkillDefinition };
+
+const INITIAL_CP = 150;
+const CP_PER_LEVEL = 15;
 
 export const useModelStore = defineStore("model", () => {
   const chars = useCharactersStore();
@@ -31,6 +35,7 @@ export const useModelStore = defineStore("model", () => {
   const magicAdd = field("magicAdd");
   const level = field("level");
   const name = field("name");
+  const wealthLevelKey = field("wealthLevelKey");
 
   const hp = computed(
     () => Math.round((st.value ?? 10) * 1.5) + (hpAdd.value ?? 0),
@@ -39,9 +44,7 @@ export const useModelStore = defineStore("model", () => {
   const per = computed(() => (iq.value ?? 10) + (perAdd.value ?? 0));
   const fp = computed(() => (ht.value ?? 10) + (fpAdd.value ?? 0));
   const basicMove = computed(
-    () =>
-      Math.floor(((ht.value ?? 10) + (dx.value ?? 10)) / 4) +
-      (basicMoveAdd.value ?? 0),
+    () => ((ht.value ?? 10) + (dx.value ?? 10)) / 4 + (basicMoveAdd.value ?? 0),
   );
   const magic = computed(
     () => Math.floor((iq.value ?? 10) * 0.65) + (magicAdd.value ?? 0),
@@ -50,8 +53,11 @@ export const useModelStore = defineStore("model", () => {
   // Collection refs — in-place mutations (push/splice/assignment) are reactive
   const skills = computed(() => w.value?.skills ?? []);
   const traits = computed(() => w.value?.traits ?? []);
+  const specialAbilities = computed(() => w.value?.specialAbilities ?? []);
 
-  const availableCp = computed(() => 200 + ((level.value ?? 1) - 1) * 15);
+  const availableCp = computed(
+    () => INITIAL_CP + ((level.value ?? 1) - 1) * CP_PER_LEVEL,
+  );
 
   const usedCp = computed(() => {
     if (!w.value) return 0;
@@ -67,6 +73,12 @@ export const useModelStore = defineStore("model", () => {
     total += (basicMoveAdd.value ?? 0) * 5;
     total += (magicAdd.value ?? 0) * 10;
     for (const trait of traits.value) total += trait.cp ?? 0;
+    for (const sa of specialAbilities.value) total += sa.cp ?? 0;
+    // Wealth
+    const wealthLevel = WEALTH_LEVELS.find(
+      (w) => w.key === (wealthLevelKey.value ?? "0"),
+    );
+    if (wealthLevel) total += wealthLevel.cp;
     for (const skill of skills.value) {
       if (skill.currentLevel === 0) continue;
       const cost = targetLevelCost(skill, skill.currentLevel, 8);
@@ -130,6 +142,17 @@ export const useModelStore = defineStore("model", () => {
     skill: SkillDefinition,
     targetLevel: number,
   ): number | null {
+    // Use locked cost if it was stored at a previous save
+    const locked = skill.lockedLevelCosts?.[targetLevel];
+    if (locked !== undefined) return locked;
+    return dynamicLevelCost(skill, targetLevel);
+  }
+
+  /** Pure dynamic cost, never looks at locked costs. Used when locking. */
+  function dynamicLevelCost(
+    skill: SkillDefinition,
+    targetLevel: number,
+  ): number | null {
     const lvl = getEffectiveLevel(skill, targetLevel);
     if (targetLevel <= 8) {
       switch (lvl) {
@@ -177,6 +200,32 @@ export const useModelStore = defineStore("model", () => {
     return total;
   }
 
+  /**
+   * For every trained skill, lock in CP costs for all levels (8 → currentLevel)
+   * that don't already have a stored cost. Must be called right before saving.
+   */
+  function lockSkillCosts() {
+    const wc = chars.workingCopy;
+    if (!wc) return;
+    for (const skill of wc.skills) {
+      if (skill.currentLevel === 0) continue;
+      if (!skill.lockedLevelCosts) skill.lockedLevelCosts = {};
+      for (let lvl = 8; lvl <= skill.currentLevel; lvl++) {
+        if (!(lvl in skill.lockedLevelCosts)) {
+          const cost = dynamicLevelCost(skill, lvl);
+          // Only lock if calculable (null = impossible, shouldn't be reachable)
+          if (cost !== null) skill.lockedLevelCosts[lvl] = cost;
+        }
+      }
+    }
+  }
+
+  /** Lock skill costs, then persist the working copy. */
+  function lockAndSave() {
+    lockSkillCosts();
+    chars.saveCharacter();
+  }
+
   return {
     name,
     st,
@@ -198,9 +247,13 @@ export const useModelStore = defineStore("model", () => {
     level,
     skills,
     traits,
+    specialAbilities,
+    wealthLevelKey,
     availableCp,
     usedCp,
     levelCost,
     targetLevelCost,
+    lockSkillCosts,
+    lockAndSave,
   };
 });

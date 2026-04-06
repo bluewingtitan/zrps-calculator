@@ -1,14 +1,37 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useModelStore } from "@/stores/model";
 import AttrCounter from "./AttrCounter.vue";
 
 const store = useModelStore();
+
+const totalCp = computed(
+  () =>
+    (store.st - 10) * 15 +
+    (store.dx - 10) * 25 +
+    (store.iq - 10) * 25 +
+    (store.ht - 10) * 15,
+);
 </script>
 
 <template>
   <div class="card bg-base-200 shadow">
     <div class="card-body gap-0 p-4">
-      <h2 class="card-title text-base mb-2">Basisattribute</h2>
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="card-title text-base">Basisattribute</h2>
+        <span
+          class="text-xs font-semibold"
+          :class="
+            totalCp > 0
+              ? 'text-warning'
+              : totalCp < 0
+                ? 'text-success'
+                : 'text-base-content/30'
+          "
+        >
+          {{ totalCp > 0 ? "+" : "" }}{{ totalCp }}&thinsp;CP
+        </span>
+      </div>
 
       <div class="divide-y divide-base-300">
         <AttrCounter

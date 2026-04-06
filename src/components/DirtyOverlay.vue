@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useCharactersStore } from "@/stores/characters";
+import { useModelStore } from "@/stores/model";
 import { PhFloppyDisk, PhArrowCounterClockwise } from "@phosphor-icons/vue";
 
 const chars = useCharactersStore();
+const store = useModelStore();
 
 function save() {
-  chars.saveCharacter();
+  store.lockAndSave();
 }
 
 function discard() {

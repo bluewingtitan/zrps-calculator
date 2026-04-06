@@ -2,16 +2,20 @@
 import { onMounted } from "vue";
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { useCharactersStore } from "@/stores/characters";
+import { useModelStore } from "@/stores/model";
 import StickyBar from "@/components/StickyBar.vue";
 import PrimaryAttributes from "@/components/PrimaryAttributes.vue";
 import SecondaryAttributes from "@/components/SecondaryAttributes.vue";
 import TraitsCard from "@/components/TraitsCard.vue";
 import SkillsCard from "@/components/SkillsCard.vue";
+import WealthCard from "@/components/WealthCard.vue";
 import DirtyOverlay from "@/components/DirtyOverlay.vue";
+import SpecialAbilitiesCard from "@/components/SpecialAbilitiesCard.vue";
 
 const route = useRoute();
 const router = useRouter();
 const chars = useCharactersStore();
+const modelStore = useModelStore();
 
 onMounted(() => {
   const id = route.params.id as string;
@@ -35,7 +39,7 @@ onBeforeRouteLeave((_to, _from, next) => {
     "Es gibt ungespeicherte Änderungen.\n\nSpeichern vor dem Verlassen?",
   );
   if (answer) {
-    chars.saveCharacter();
+    modelStore.lockAndSave();
   } else {
     chars.discardChanges();
   }
@@ -45,15 +49,19 @@ onBeforeRouteLeave((_to, _from, next) => {
 
 <template>
   <div class="min-h-screen bg-base-100 pb-28">
-    <StickyBar />
+    <template v-if="chars.workingCopy">
+      <StickyBar />
 
-    <main class="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
-      <PrimaryAttributes />
-      <SecondaryAttributes />
-      <TraitsCard />
-      <SkillsCard />
-    </main>
+      <main class="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+        <PrimaryAttributes />
+        <SecondaryAttributes />
+        <WealthCard />
+        <TraitsCard />
+        <SpecialAbilitiesCard />
+        <SkillsCard />
+      </main>
 
-    <DirtyOverlay />
+      <DirtyOverlay />
+    </template>
   </div>
 </template>

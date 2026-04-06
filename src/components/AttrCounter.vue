@@ -49,7 +49,7 @@ function inc() {
       v-if="base !== undefined"
       class="text-xs text-base-content/40 w-10 text-right shrink-0"
     >
-      base<br />{{ base }}
+      base<br />{{ parseFloat(base.toFixed(2)) }}
     </div>
 
     <!-- Counter -->
@@ -62,7 +62,7 @@ function inc() {
         <PhMinus :size="14" />
       </button>
       <span class="font-mono font-bold text-base w-8 text-center">
-        {{ base !== undefined ? base + model : model }}
+        {{ parseFloat((base !== undefined ? base + model : model).toFixed(2)) }}
       </span>
       <button
         class="btn btn-xs btn-ghost btn-circle"

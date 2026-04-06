@@ -1,264 +1,92 @@
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { defineStore } from "pinia";
-import { useLocalStorage } from "@vueuse/core";
+import { useCharactersStore } from "./characters";
+import type { BoundAttribute, SkillDefinition } from "@/model/character";
 
-type BoundAttribute =
-  | "ST"
-  | "DX"
-  | "IQ"
-  | "HT"
-  | "HP"
-  | "Will"
-  | "Per"
-  | "FP"
-  | "BasicMove"
-  | "Magic";
-
-type SkillHardness = 0 | 1 | 2 | 3 | 4 | 5; // easy, average, hard, very hard, extreme, impossible
-
-interface SkillDefinition {
-  name: string;
-  boundAttribute: BoundAttribute | BoundAttribute[];
-  hardness: SkillHardness;
-  currentLevel: number;
-  active: boolean;
-}
-
-interface TraitDefinition {
-  name: string;
-  cp: number; // positive = Vorteil cost, negative = Nachteil (refund)
-}
-
-const CP_PER_LEVEL = 15;
+export type { BoundAttribute, SkillDefinition };
 
 export const useModelStore = defineStore("model", () => {
-  // Primary attributes (stored as absolute values, base = 10)
-  const st = useLocalStorage("ST", 10);
-  const dx = useLocalStorage("DX", 10);
-  const iq = useLocalStorage("IQ", 10);
-  const ht = useLocalStorage("HT", 10);
+  const chars = useCharactersStore();
+  const w = computed(() => chars.workingCopy);
 
-  // Secondary attributes (stored as deltas; base derived from primary attributes)
-  const hpAdd = useLocalStorage("HPAdd", 0);
-  const hp = computed(() => Math.round(st.value * 1.5) + hpAdd.value);
+  // ── Writable computed proxies into working copy ──────────────────────────
+  function field<K extends keyof NonNullable<typeof w.value>>(key: K) {
+    return computed({
+      get: () => w.value?.[key] as NonNullable<typeof w.value>[K],
+      set: (v) => {
+        if (w.value) (w.value[key] as NonNullable<typeof w.value>[K]) = v;
+      },
+    });
+  }
 
-  const willAdd = useLocalStorage("WillAdd", 0);
-  const will = computed(() => iq.value + willAdd.value);
+  const st = field("st");
+  const dx = field("dx");
+  const iq = field("iq");
+  const ht = field("ht");
+  const hpAdd = field("hpAdd");
+  const willAdd = field("willAdd");
+  const perAdd = field("perAdd");
+  const fpAdd = field("fpAdd");
+  const basicMoveAdd = field("basicMoveAdd");
+  const magicAdd = field("magicAdd");
+  const level = field("level");
+  const name = field("name");
 
-  const perAdd = useLocalStorage("PerAdd", 0);
-  const per = computed(() => iq.value + perAdd.value);
-
-  const fpAdd = useLocalStorage("FPAdd", 0);
-  const fp = computed(() => ht.value + fpAdd.value);
-
-  const basicMoveAdd = useLocalStorage("BasicMoveAdd", 0);
+  const hp = computed(
+    () => Math.round((st.value ?? 10) * 1.5) + (hpAdd.value ?? 0),
+  );
+  const will = computed(() => (iq.value ?? 10) + (willAdd.value ?? 0));
+  const per = computed(() => (iq.value ?? 10) + (perAdd.value ?? 0));
+  const fp = computed(() => (ht.value ?? 10) + (fpAdd.value ?? 0));
   const basicMove = computed(
-    () => Math.floor((ht.value + dx.value) / 4) + basicMoveAdd.value,
+    () =>
+      Math.floor(((ht.value ?? 10) + (dx.value ?? 10)) / 4) +
+      (basicMoveAdd.value ?? 0),
+  );
+  const magic = computed(
+    () => Math.floor((iq.value ?? 10) * 0.65) + (magicAdd.value ?? 0),
   );
 
-  const magicAdd = useLocalStorage("MagicAdd", 0);
-  const magic = computed(() => Math.floor(iq.value * 0.65) + magicAdd.value);
+  // Collection refs — in-place mutations (push/splice/assignment) are reactive
+  const skills = computed(() => w.value?.skills ?? []);
+  const traits = computed(() => w.value?.traits ?? []);
 
-  const skills = useLocalStorage<SkillDefinition[]>("skills", []);
-  const traits = useLocalStorage<TraitDefinition[]>("traits", []);
-  const modelVersion = useLocalStorage("modelVersion", 0);
-
-  const level = useLocalStorage("level", 1);
-
-  const availableCp = computed(() => 200 + (level.value - 1) * CP_PER_LEVEL);
+  const availableCp = computed(() => 200 + ((level.value ?? 1) - 1) * 15);
 
   const usedCp = computed(() => {
+    if (!w.value) return 0;
     let total = 0;
-
-    // Primary attributes (15 or 25 CP per level, relative to base 10)
-    total += (st.value - 10) * 15;
-    total += (dx.value - 10) * 25;
-    total += (iq.value - 10) * 25;
-    total += (ht.value - 10) * 15;
-
-    // Secondary attribute adjustments (cost per point of delta)
-    total += hpAdd.value * 2;
-    total += willAdd.value * 5;
-    total += perAdd.value * 5;
-    total += fpAdd.value * 3;
-    total += basicMoveAdd.value * 5;
-    total += magicAdd.value * 10;
-
-    // Traits (Vor- und Nachteile)
-    for (const trait of traits.value) {
-      total += trait.cp;
-    }
-
-    // Skills
+    total += ((st.value ?? 10) - 10) * 15;
+    total += ((dx.value ?? 10) - 10) * 25;
+    total += ((iq.value ?? 10) - 10) * 25;
+    total += ((ht.value ?? 10) - 10) * 15;
+    total += (hpAdd.value ?? 0) * 2;
+    total += (willAdd.value ?? 0) * 5;
+    total += (perAdd.value ?? 0) * 5;
+    total += (fpAdd.value ?? 0) * 3;
+    total += (basicMoveAdd.value ?? 0) * 5;
+    total += (magicAdd.value ?? 0) * 10;
+    for (const trait of traits.value) total += trait.cp ?? 0;
     for (const skill of skills.value) {
-      if (skill.currentLevel === 0) {
-        continue; // skip untrained skills
-      }
-
+      if (skill.currentLevel === 0) continue;
       const cost = targetLevelCost(skill, skill.currentLevel, 8);
-      if (cost !== null) {
-        total += cost;
-      }
+      if (cost !== null) total += cost;
     }
-
     return total;
   });
 
-  function migrate() {
-    if (modelVersion.value < 1) {
-      modelVersion.value = 1;
-
-      // initialize skills
-      skills.value = [
-        // fighting skills
-        {
-          name: "Nahkampf (leicht)",
-          boundAttribute: "DX",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Nahkampf (schwer)",
-          boundAttribute: "ST",
-          hardness: 2,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Unbewaffneter Kampf",
-          boundAttribute: "HT",
-          hardness: 2,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Fernkampf",
-          boundAttribute: "DX",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-
-        // body skills
-        {
-          name: "Athletik",
-          boundAttribute: "ST",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Akrobatik",
-          boundAttribute: ["HT", "DX"],
-          hardness: 2,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Heimlichkeit",
-          boundAttribute: "DX",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Fingerfertigkeit",
-          boundAttribute: "DX",
-          hardness: 2,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Überleben",
-          boundAttribute: "HT",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Handwerk",
-          boundAttribute: ["ST", "IQ"],
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-
-        // mental skills
-
-        {
-          name: "Wissen und Schriften",
-          boundAttribute: "IQ",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Naturkunde",
-          boundAttribute: "IQ",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Heikunde",
-          boundAttribute: "IQ",
-          hardness: 2,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Mechanik",
-          boundAttribute: ["IQ", "ST"],
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-
-        // social skills
-
-        {
-          name: "Überreden",
-          boundAttribute: "HT",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Täuschung",
-          boundAttribute: "IQ",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Einschüchtern",
-          boundAttribute: "ST",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-        {
-          name: "Kreaturenkenntnis",
-          boundAttribute: "Per",
-          hardness: 1,
-          currentLevel: 0,
-          active: false,
-        },
-      ];
-    }
-  }
+  // ── Skill cost helpers ────────────────────────────────────────────────────
 
   function attributeValue(attribute: BoundAttribute): number {
     switch (attribute) {
       case "ST":
-        return st.value;
+        return st.value ?? 10;
       case "DX":
-        return dx.value;
+        return dx.value ?? 10;
       case "IQ":
-        return iq.value;
+        return iq.value ?? 10;
       case "HT":
-        return ht.value;
+        return ht.value ?? 10;
       case "HP":
         return hp.value;
       case "Will":
@@ -271,62 +99,40 @@ export const useModelStore = defineStore("model", () => {
         return basicMove.value;
       case "Magic":
         return magic.value;
-
       default:
         throw new Error(`Unknown attribute: ${attribute}`);
     }
   }
 
-  function capHardness(hardness: number): SkillHardness {
-    if (hardness < 0) {
-      return 0;
-    } else if (hardness > 5) {
-      return 5;
-    } else {
-      return hardness as SkillHardness;
-    }
+  function capHardness(hardness: number): 0 | 1 | 2 | 3 | 4 | 5 {
+    return Math.max(0, Math.min(5, hardness)) as 0 | 1 | 2 | 3 | 4 | 5;
   }
 
   function getEffectiveLevel(
     skill: SkillDefinition,
     targetLevel: number,
-  ): SkillHardness {
+  ): 0 | 1 | 2 | 3 | 4 | 5 {
     const attribute = Array.isArray(skill.boundAttribute)
       ? Math.max(...skill.boundAttribute.map(attributeValue))
       : attributeValue(skill.boundAttribute);
-
-    targetLevel = targetLevel;
-
-    if (targetLevel <= 8) {
-      targetLevel = 8;
-    }
-
+    if (targetLevel <= 8) targetLevel = 8;
     const diff = targetLevel - attribute;
-
-    if (diff > 4) {
-      return capHardness(skill.hardness + 5);
-    } else if (diff === 4) {
-      return capHardness(skill.hardness + 3);
-    } else if (diff === 3) {
-      return capHardness(skill.hardness + 2);
-    } else if (diff === 2) {
-      return capHardness(skill.hardness + 1);
-    } else if (diff >= 0 && diff <= 1) {
-      return skill.hardness;
-    } else if (diff === -1) {
-      return capHardness(skill.hardness - 1);
-    } else {
-      return capHardness(skill.hardness - 2);
-    }
+    if (diff > 4) return capHardness(skill.hardness + 5);
+    if (diff === 4) return capHardness(skill.hardness + 3);
+    if (diff === 3) return capHardness(skill.hardness + 2);
+    if (diff === 2) return capHardness(skill.hardness + 1);
+    if (diff >= 0 && diff <= 1) return skill.hardness;
+    if (diff === -1) return capHardness(skill.hardness - 1);
+    return capHardness(skill.hardness - 2);
   }
 
   function levelCost(
     skill: SkillDefinition,
     targetLevel: number,
   ): number | null {
-    const level = getEffectiveLevel(skill, targetLevel);
+    const lvl = getEffectiveLevel(skill, targetLevel);
     if (targetLevel <= 8) {
-      switch (level) {
+      switch (lvl) {
         case 0:
           return 4;
         case 1:
@@ -338,11 +144,10 @@ export const useModelStore = defineStore("model", () => {
         case 4:
           return 12;
         case 5:
-          return null; // impossible
+          return null;
       }
     }
-
-    switch (level) {
+    switch (lvl) {
       case 0:
         return 2;
       case 1:
@@ -354,31 +159,26 @@ export const useModelStore = defineStore("model", () => {
       case 4:
         return 12;
       case 5:
-        return null; // impossible
+        return null;
     }
   }
 
   function targetLevelCost(
     skill: SkillDefinition,
     targetLevel: number,
-    fromLevel: number = 8,
+    fromLevel = 8,
   ): number | null {
-    let totalCost = 0;
-
-    for (let level = fromLevel; level <= targetLevel; level++) {
-      const cost = levelCost(skill, level);
-      if (cost === null) {
-        return null; // impossible
-      }
-      totalCost += cost;
+    let total = 0;
+    for (let l = fromLevel; l <= targetLevel; l++) {
+      const cost = levelCost(skill, l);
+      if (cost === null) return null;
+      total += cost;
     }
-
-    return totalCost;
+    return total;
   }
 
-  migrate();
-
   return {
+    name,
     st,
     dx,
     iq,

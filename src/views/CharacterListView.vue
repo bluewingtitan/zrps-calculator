@@ -33,8 +33,7 @@ function openCharacter(id: string) {
 }
 
 function createCharacter() {
-  const char = chars.createCharacter();
-  router.push({ name: "edit", params: { id: char.id } });
+  router.push({ name: "create" });
 }
 
 function deleteCharacter(id: string, event: MouseEvent) {

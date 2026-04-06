@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { useLocalStorage } from "@vueuse/core";
 import {
   type CharacterData,
+  type CharacterPrebuild,
   cloneCharacter,
   defaultCharacter,
   migrateCharacter,
@@ -50,9 +51,26 @@ export const useCharactersStore = defineStore("characters", () => {
     workingCopy.value = JSON.parse(savedSnapshot.value);
   }
 
-  function createCharacter(): CharacterData {
+  function createCharacter(
+    options: {
+      name?: string;
+      prebuild?: CharacterPrebuild;
+      baseCp?: number;
+      cpPerLevel?: number;
+    } = {},
+  ): CharacterData {
     const id = crypto.randomUUID();
-    const char = defaultCharacter(id);
+    const char = defaultCharacter(id, options.name);
+    // Apply prebuild overrides first
+    if (options.prebuild) {
+      Object.assign(char, options.prebuild.overrides);
+      // Object.assign may have clobbered id/name — restore them
+      char.id = id;
+      char.name = options.name ?? defaultCharacter(id).name;
+    }
+    // Manual CP overrides take precedence over any prebuild value
+    if (options.baseCp !== undefined) char.baseCp = options.baseCp;
+    if (options.cpPerLevel !== undefined) char.cpPerLevel = options.cpPerLevel;
     const toSave = cloneCharacter(char);
     characters.value.push(toSave);
     workingCopy.value = cloneCharacter(toSave);

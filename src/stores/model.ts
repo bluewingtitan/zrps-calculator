@@ -36,6 +36,8 @@ export const useModelStore = defineStore("model", () => {
   const level = field("level");
   const name = field("name");
   const wealthLevelKey = field("wealthLevelKey");
+  const baseCp = field("baseCp");
+  const cpPerLevel = field("cpPerLevel");
 
   const hp = computed(
     () => Math.round((st.value ?? 10) * 1.5) + (hpAdd.value ?? 0),
@@ -56,7 +58,9 @@ export const useModelStore = defineStore("model", () => {
   const specialAbilities = computed(() => w.value?.specialAbilities ?? []);
 
   const availableCp = computed(
-    () => INITIAL_CP + ((level.value ?? 1) - 1) * CP_PER_LEVEL,
+    () =>
+      (baseCp.value ?? INITIAL_CP) +
+      ((level.value ?? 1) - 1) * (cpPerLevel.value ?? CP_PER_LEVEL),
   );
 
   const usedCp = computed(() => {
@@ -249,6 +253,8 @@ export const useModelStore = defineStore("model", () => {
     traits,
     specialAbilities,
     wealthLevelKey,
+    baseCp,
+    cpPerLevel,
     availableCp,
     usedCp,
     levelCost,

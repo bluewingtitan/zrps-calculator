@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { PhPlus, PhTrash, PhDotsSixVertical } from "@phosphor-icons/vue";
+import {
+  PhPlus,
+  PhTrash,
+  PhDotsSixVertical,
+  PhBookOpen,
+} from "@phosphor-icons/vue";
+import CpEntryPresetModal from "./CpEntryPresetModal.vue";
+import type { CpEntryPreset } from "@/model/character";
 
 const props = defineProps<{
   title: string;
   emptyText: string;
   items: Array<{ name: string; cp: number; description?: string }>;
+  presets?: CpEntryPreset[];
 }>();
 
 const totalCp = computed(() =>
@@ -26,6 +34,33 @@ function onCpInput(idx: number, event: Event) {
   const item = props.items[idx];
   if (!item) return;
   item.cp = isNaN(parsed) ? 0 : parsed;
+}
+
+// ── Preset modal ──────────────────────────────────────────────────────────
+const presetModalOpen = ref(false);
+const presetTargetIdx = ref<number | null>(null);
+
+function openPresetModal(idx: number | null) {
+  presetTargetIdx.value = idx;
+  presetModalOpen.value = true;
+}
+
+function handlePresetSelect(preset: CpEntryPreset) {
+  const entry = {
+    name: preset.name,
+    cp: preset.cp,
+    description: preset.description,
+  };
+  if (presetTargetIdx.value !== null) {
+    const item = props.items[presetTargetIdx.value];
+    if (item) {
+      item.name = entry.name;
+      item.cp = entry.cp;
+      item.description = entry.description;
+    }
+  } else {
+    props.items.push(entry);
+  }
 }
 
 // ── Drag & Drop ────────────────────────────────────────────────────────────
@@ -132,7 +167,7 @@ function onDragEnd() {
             @dragstart="onDragStart(idx, $event)"
             @dragend="onDragEnd"
           >
-            <!-- Main row: handle + name + cp + delete -->
+            <!-- Main row: handle + name + cp + load + delete -->
             <div class="flex items-center gap-2 select-none">
               <!-- Drag handle -->
               <span
@@ -172,6 +207,16 @@ function onDragEnd() {
                   >CP</span
                 >
               </div>
+
+              <!-- Load from preset -->
+              <button
+                v-if="presets?.length"
+                class="btn btn-xs btn-ghost btn-circle text-base-content/50 hover:text-primary shrink-0"
+                title="Aus Vorlage laden"
+                @click="openPresetModal(idx)"
+              >
+                <PhBookOpen :size="14" />
+              </button>
 
               <!-- Remove -->
               <button
@@ -214,14 +259,33 @@ function onDragEnd() {
         {{ emptyText }}
       </p>
 
-      <!-- Add button -->
-      <button
-        class="btn btn-sm btn-dashed btn-neutral mt-3 gap-2"
-        @click="addItem"
-      >
-        <PhPlus :size="16" />
-        Hinzufügen
-      </button>
+      <!-- Add buttons -->
+      <div class="flex gap-2 mt-3">
+        <button
+          class="btn btn-sm btn-dashed btn-neutral flex-1 gap-2"
+          @click="addItem"
+        >
+          <PhPlus :size="16" />
+          Hinzufügen
+        </button>
+        <button
+          v-if="presets?.length"
+          class="btn btn-sm btn-dashed btn-neutral flex-1 gap-2"
+          @click="openPresetModal(null)"
+        >
+          <PhBookOpen :size="16" />
+          Aus Vorlage
+        </button>
+      </div>
+
+      <!-- Preset modal -->
+      <CpEntryPresetModal
+        v-if="presets?.length"
+        :open="presetModalOpen"
+        :presets="presets"
+        @close="presetModalOpen = false"
+        @select="handlePresetSelect"
+      />
     </div>
   </div>
 </template>

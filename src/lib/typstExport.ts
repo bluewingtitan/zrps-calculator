@@ -352,7 +352,7 @@ ${traitsItems}
   /* ---------- assemble ---------------------------------------------- */
   return `#set page(
   paper: "a4",
-  margin: (x: 2cm, y: 2.5cm),
+  margin: (x: 1.5cm, y: 1cm),
   footer: context [
     #set text(8pt, fill: luma(160))
     #align(center)[ZRPS Charakterbogen #sym.dot.c "${ts(s.name || "Unbekannt")}" #sym.dot.c Lvl. ${s.level}]

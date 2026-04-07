@@ -34,6 +34,8 @@ export const useModelStore = defineStore("model", () => {
   const basicMoveAdd = field("basicMoveAdd");
   const level = field("level");
   const name = field("name");
+  const daseinsform = field("daseinsform");
+  const portrait = field("portrait");
   const wealthLevelKey = field("wealthLevelKey");
   const baseCp = field("baseCp");
   const cpPerLevel = field("cpPerLevel");
@@ -225,6 +227,8 @@ export const useModelStore = defineStore("model", () => {
 
   return {
     name,
+    daseinsform,
+    portrait,
     st,
     dx,
     iq,

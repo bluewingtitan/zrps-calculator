@@ -4,6 +4,7 @@ import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { useCharactersStore } from "@/stores/characters";
 import { useModelStore } from "@/stores/model";
 import StickyBar from "@/components/StickyBar.vue";
+import ProfileCard from "@/components/ProfileCard.vue";
 import PrimaryAttributes from "@/components/PrimaryAttributes.vue";
 import SecondaryAttributes from "@/components/SecondaryAttributes.vue";
 import TraitsCard from "@/components/TraitsCard.vue";
@@ -45,8 +46,6 @@ onBeforeRouteLeave((_to, _from, next) => {
   }
   next();
 });
-
-
 </script>
 
 <template>
@@ -55,6 +54,7 @@ onBeforeRouteLeave((_to, _from, next) => {
       <StickyBar />
 
       <main class="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+        <ProfileCard />
         <PrimaryAttributes />
         <SecondaryAttributes />
         <WealthCard />

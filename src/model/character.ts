@@ -962,6 +962,8 @@ export interface CharacterData {
   basicMoveAdd: number;
 
   level: number;
+  daseinsform: string; // race / character type (free text)
+  portrait: string | null; // base64 data URL or null
   baseCp: number; // base CP at character creation (campaign-specific)
   cpPerLevel: number; // CP gained per level (campaign-specific)
   skills: SkillDefinition[];
@@ -970,7 +972,7 @@ export interface CharacterData {
   wealthLevelKey: string; // key into WEALTH_LEVELS
 }
 
-export const MODEL_VERSION = 5;
+export const MODEL_VERSION = 6;
 
 export function defaultSkills(): SkillDefinition[] {
   return [
@@ -1135,6 +1137,8 @@ export function defaultCharacter(
     fpAdd: 0,
     basicMoveAdd: 0,
     level: 1,
+    daseinsform: "",
+    portrait: null,
     baseCp: 150,
     cpPerLevel: 15,
     skills: defaultSkills(),
@@ -1174,6 +1178,11 @@ export function migrateCharacter(data: CharacterData): CharacterData {
       currentLevel: 0,
       active: false,
     });
+  }
+  if (data.modelVersion < 6) {
+    data.modelVersion = 6;
+    if (!data.daseinsform) data.daseinsform = "";
+    if (data.portrait === undefined) data.portrait = null;
   }
   return data;
 }

@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useModelStore } from "@/stores/model";
-import { useCharactersStore,  } from "@/stores/characters";
+import { useCharactersStore } from "@/stores/characters";
 import {
   PhMinus,
   PhPlus,
@@ -28,7 +28,8 @@ type Destination = "list" | "preview";
 const pendingDestination = ref<Destination>("list");
 
 function decLevel() {
-  if ((modelStore.level ?? 1) > 1) modelStore.level = (modelStore.level ?? 1) - 1;
+  if ((modelStore.level ?? 1) > 1)
+    modelStore.level = (modelStore.level ?? 1) - 1;
 }
 function incLevel() {
   modelStore.level = (modelStore.level ?? 1) + 1;
@@ -73,8 +74,6 @@ function cancelConfirm() {
   showConfirm.value = false;
 }
 
-
-
 const pdfExporting = ref(false);
 const pdfError = ref<string | null>(null);
 
@@ -86,10 +85,11 @@ const activeSkills = computed(() =>
   modelStore.skills.filter((s) => s.currentLevel > 0),
 );
 
-
 const pdfSnapshot = computed<CharacterPdfSnapshot>(() => ({
   name: chars.workingCopy?.name ?? "",
   level: modelStore.level ?? 1,
+  daseinsform: modelStore.daseinsform ?? "",
+  portrait: modelStore.portrait ?? null,
   st: modelStore.st ?? 10,
   dx: modelStore.dx ?? 10,
   iq: modelStore.iq ?? 10,
@@ -105,8 +105,15 @@ const pdfSnapshot = computed<CharacterPdfSnapshot>(() => ({
       : undefined,
   cpUsed: modelStore.availableCp - modelStore.usedCp,
   cpTotal: modelStore.availableCp,
-  skills: activeSkills.value.map((s) => ({ name: s.name, level: s.currentLevel })),
-  traits: modelStore.traits.map((t) => ({ name: t.name, cp: t.cp, description: t.description })),
+  skills: activeSkills.value.map((s) => ({
+    name: s.name,
+    level: s.currentLevel,
+  })),
+  traits: modelStore.traits.map((t) => ({
+    name: t.name,
+    cp: t.cp,
+    description: t.description,
+  })),
   specialAbilities: modelStore.specialAbilities.map((a) => ({
     name: a.name,
     description: a.description,
@@ -138,34 +145,6 @@ async function handleExportPdf() {
         <PhArrowLeft :size="16" />
       </button>
 
-      <!-- Character name (inline editable) -->
-      <input
-        class="input input-xs bg-transparent border-none shadow-none focus:outline-none font-semibold text-base w-32 shrink min-w-0 px-1"
-        :value="modelStore.name ?? ''"
-        @input="modelStore.name = ($event.target as HTMLInputElement).value"
-        placeholder="Name…"
-      />
-
-      <div class="divider divider-horizontal mx-0"></div>
-
-      <!-- Level -->
-      <div class="flex items-center gap-1 shrink-0">
-        <span class="text-xs font-semibold text-base-content/60">LVL</span>
-        <button
-          class="btn btn-xs btn-ghost btn-circle"
-          @click="decLevel"
-          :disabled="(modelStore.level ?? 1) <= 1"
-        >
-          <PhMinus :size="14" />
-        </button>
-        <span class="text-base font-bold w-6 text-center">{{
-          modelStore.level ?? 1
-        }}</span>
-        <button class="btn btn-xs btn-ghost btn-circle" @click="incLevel">
-          <PhPlus :size="14" />
-        </button>
-      </div>
-
       <div class="divider divider-horizontal mx-0"></div>
 
       <!-- CP bar -->
@@ -191,18 +170,19 @@ async function handleExportPdf() {
         ></progress>
       </div>
 
-      <!-- Preview button -->
-          <button
-            class="btn btn-xs btn-outline gap-1.5"
-            :class="{ 'btn-disabled': pdfExporting }"
-            :disabled="pdfExporting"
-            @click="handleExportPdf"
-            title="Charakterbogen als PDF exportieren"
-          >
-            <span v-if="pdfExporting" class="loading loading-spinner loading-xs" />
-            <PhFilePdf v-else :size="14" />
-            PDF
-          </button>
+      <div class="divider divider-horizontal mx-0"></div>
+
+      <button
+        class="btn btn-xs btn-outline gap-1.5"
+        :class="{ 'btn-disabled': pdfExporting }"
+        :disabled="pdfExporting"
+        @click="handleExportPdf"
+        title="Charakterbogen als PDF exportieren"
+      >
+        <span v-if="pdfExporting" class="loading loading-spinner loading-xs" />
+        <PhFilePdf v-else :size="14" />
+        PDF
+      </button>
     </div>
   </div>
 
@@ -216,8 +196,8 @@ async function handleExportPdf() {
       <h3 class="font-bold text-lg mb-2">Ungespeicherte Änderungen</h3>
       <p class="text-sm text-base-content/70">
         Möchtest du die Änderungen an
-        <strong>{{ modelStore.name || "diesem Charakter" }}</strong> speichern, bevor
-        du die Seite verlässt?
+        <strong>{{ modelStore.name || "diesem Charakter" }}</strong> speichern,
+        bevor du die Seite verlässt?
       </p>
       <div class="modal-action">
         <button class="btn btn-ghost btn-sm" @click="cancelConfirm">

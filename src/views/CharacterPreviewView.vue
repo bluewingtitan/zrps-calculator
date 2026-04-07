@@ -77,7 +77,9 @@ async function handleExportPdf() {
   } finally {
     pdfExporting.value = false;
   }
-}</script>
+}
+
+</script>
 
 <template>
   <div class="min-h-screen bg-base-300 pb-16 print:bg-white">

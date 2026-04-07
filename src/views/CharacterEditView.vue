@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { useCharactersStore } from "@/stores/characters";
 import { useModelStore } from "@/stores/model";
@@ -45,6 +45,8 @@ onBeforeRouteLeave((_to, _from, next) => {
   }
   next();
 });
+
+
 </script>
 
 <template>

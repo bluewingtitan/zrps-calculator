@@ -27,6 +27,8 @@ export interface PdfAbility {
 export interface CharacterPdfSnapshot {
   name: string;
   level: number;
+  daseinsform?: string; // race / character type
+  portrait?: string | null; // base64 data URL
   // Primary attributes
   st: number;
   dx: number;
@@ -67,10 +69,7 @@ function ensureInit(): void {
  * literals; newlines are replaced with a space to keep the string on one line.
  */
 function ts(s: string): string {
-  return s
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .replace(/\r?\n/g, " ");
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
 }
 
 /**
@@ -93,7 +92,10 @@ function tc(s: string): string {
 
 // ── Typst source builder ──────────────────────────────────────────────────
 
-function buildTypstSource(s: CharacterPdfSnapshot): string {
+function buildTypstSource(
+  s: CharacterPdfSnapshot,
+  portraitPath: string | null,
+): string {
   const bew = Math.round(s.basicMove);
 
   /* ── Typst helpers ─────────────────────────────────────────────────── */
@@ -186,6 +188,19 @@ function buildTypstSource(s: CharacterPdfSnapshot): string {
 }`;
 
   /* ── Top section ───────────────────────────────────────────────────── */
+  // Portrait element: image if available, otherwise placeholder rect.
+  const portraitElement = portraitPath
+    ? `block(
+    width: 5cm, height: 6cm, clip: true,
+    image("${portraitPath}", width: 5cm, height: 6cm, fit: "cover"),
+  )`
+    : `rect(width: 5cm, height: 6cm, stroke: 0.6pt + luma(160))[]`;
+
+  // Daseinsform inline after name: text if set, nothing otherwise.
+  const daseinsformInline = s.daseinsform
+    ? `\n        h(0.5em)\n        text(10pt, fill: luma(80))[${tc(s.daseinsform)}]`
+    : "";
+
   // Portrait: 5∶7 ratio. At 4 cm wide → 5.6 cm tall.
   // Info column is wrapped in a fixed-height block so #align(horizon) centers
   // the whole group relative to the portrait regardless of content height.
@@ -194,18 +209,15 @@ function buildTypstSource(s: CharacterPdfSnapshot): string {
 #grid(
   columns: (5cm, 1fr),
   gutter: 1em,
-  // ── Portrait placeholder ──────────────────────────────────────
-  rect(width: 5cm, height: 6cm, stroke: 0.6pt + luma(160))[],
+  // ── Portrait ──────────────────────────────────────────────────
+  ${portraitElement},
   // ── Character info — vertically centered in portrait height ───
   block(height: 5.6cm)[
     #align(horizon)[
       #v(0.5cm)
-      // Name, Lvl, and Daseinsform write-in line on one row
+      // Name, Lvl, and Daseinsform
       #{
-        text(11pt, weight: "semibold")[${tc(s.name || "Unbenannt")}, Lvl. ${s.level}]
-        h(0.5em)
-        box(width: 1fr, baseline: 0.25em,
-          line(length: 100%, stroke: 0.4pt + luma(180)))
+        text(11pt, weight: "semibold")[${tc(s.name || "Unbenannt")}, Lvl. ${s.level}]${daseinsformInline}
       }
       #v(0.55em)
       // Movement speed — plain inline label + value, no box
@@ -225,12 +237,16 @@ function buildTypstSource(s: CharacterPdfSnapshot): string {
       #v(1.7cm)
       // Consumable resources — Zamomin is only shown if Magie skill is present
       #grid(
-        columns: (${s.skills.some(sk => sk.name === "Magie") ? "1fr, 1fr, 1fr, 1fr" : "1fr, 1fr, 1fr"}),
+        columns: (${s.skills.some((sk) => sk.name === "Magie") ? "1fr, 1fr, 1fr, 1fr" : "1fr, 1fr, 1fr"}),
         column-gutter: 0.5em,
         res-block("HP", ${s.hp}),
         res-block("FP", ${s.fp}),
-        res-block("Glück", 2),${s.skills.some(sk => sk.name === "Magie") ? `
-        res-block("Zamomin", 16),` : ""}
+        res-block("Glück", 2),${
+          s.skills.some((sk) => sk.name === "Magie")
+            ? `
+        res-block("Zamomin", 16),`
+            : ""
+        }
       )
     ]
   ],
@@ -309,20 +325,32 @@ function buildTypstSource(s: CharacterPdfSnapshot): string {
   ],
   // ── Skills + Special Abilities + Traits ───────────────────────
   [
-    ${s.skills.length > 0 ? `#section-box("Fertigkeiten")[
+    ${
+      s.skills.length > 0
+        ? `#section-box("Fertigkeiten")[
       #set block(spacing: 0pt)
 ${skillsItems}
-    ]` : ""}
+    ]`
+        : ""
+    }
     ${s.skills.length > 0 && s.specialAbilities.length > 0 ? "#v(0.7em)" : ""}
-    ${s.specialAbilities.length > 0 ? `#section-box("Sonderfähigkeiten")[
+    ${
+      s.specialAbilities.length > 0
+        ? `#section-box("Sonderfähigkeiten")[
       #set block(spacing: 0pt)
 ${abilitiesItems}
-    ]` : ""}
+    ]`
+        : ""
+    }
     ${(s.skills.length > 0 || s.specialAbilities.length > 0) && s.traits.length > 0 ? "#v(0.7em)" : ""}
-    ${s.traits.length > 0 ? `#section-box("Vor- & Nachteile")[
+    ${
+      s.traits.length > 0
+        ? `#section-box("Vor- & Nachteile")[
       #set block(spacing: 0pt)
 ${traitsItems}
-    ]` : ""}
+    ]`
+        : ""
+    }
   ],
 )`;
 
@@ -362,13 +390,39 @@ ${bottomLayout}
  *
  * @throws if the Typst compilation fails or `$typst.pdf()` returns nothing.
  */
-export async function exportCharacterPdf(snap: CharacterPdfSnapshot): Promise<void> {
+export async function exportCharacterPdf(
+  snap: CharacterPdfSnapshot,
+): Promise<void> {
   ensureInit();
 
-  const source = buildTypstSource(snap);
+  // Mount portrait as a virtual file if present
+  let portraitPath: string | null = null;
+  if (snap.portrait) {
+    const match = snap.portrait.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (match) {
+      const ext = match[1] === "jpeg" ? "jpg" : (match[1] ?? "png");
+      portraitPath = `/portrait.${ext}`;
+      const binary = atob(match[2]!);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)!;
+      }
+      await $typst.mapShadow(portraitPath, bytes);
+    }
+  }
+
+  const source = buildTypstSource(snap, portraitPath);
 
   // $typst.pdf() returns Promise<Uint8Array | undefined>
-  const pdfData: Uint8Array | undefined = await $typst.pdf({ mainContent: source });
+  const pdfData: Uint8Array | undefined = await $typst.pdf({
+    mainContent: source,
+  });
+
+  // Clean up shadow file
+  if (portraitPath) {
+    await $typst.unmapShadow(portraitPath);
+  }
+
   if (!pdfData || pdfData.byteLength === 0) {
     throw new Error(
       "Typst-Kompilierung fehlgeschlagen. Möglicherweise fehlen Schriftarten oder das WASM-Modul konnte nicht geladen werden.",
@@ -376,10 +430,13 @@ export async function exportCharacterPdf(snap: CharacterPdfSnapshot): Promise<vo
   }
 
   // Cast satisfies strict ArrayBuffer check; at runtime pdfData is a plain Uint8Array.
-  const blob = new Blob([pdfData as Uint8Array<ArrayBuffer>], { type: "application/pdf" });
+  const blob = new Blob([pdfData as Uint8Array<ArrayBuffer>], {
+    type: "application/pdf",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const safeName = (snap.name || "charakter").replace(/[^\w\s-]/g, "").trim() || "charakter";
+  const safeName =
+    (snap.name || "charakter").replace(/[^\w\s-]/g, "").trim() || "charakter";
   a.href = url;
   a.download = `${safeName}.pdf`;
   a.click();

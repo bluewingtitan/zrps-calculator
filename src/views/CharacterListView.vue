@@ -148,9 +148,15 @@ function exportCharacter(id: string, event: MouseEvent) {
         >
           <div class="card-body p-4 flex-row items-center gap-4">
             <div
-              class="shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center"
+              class="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center"
             >
-              <PhUser :size="20" class="text-primary" />
+              <img
+                v-if="char.portrait"
+                :src="char.portrait"
+                alt=""
+                class="w-full h-full object-cover"
+              />
+              <PhUser v-else :size="20" class="text-primary" />
             </div>
 
             <div class="flex-1 min-w-0">

@@ -708,6 +708,128 @@ export const TRAITS_PRESETS: CpEntryPreset[] = [
     cp: 10,
     tags: ["Vorteil", "Geistlich"],
   },
+
+  // ── Nachteile ─────────────────────────────────────────────────────────────
+  {
+    id: "zamomin-pakt",
+    name: "Zamomin-Pakt",
+    description:
+      "Du hast einen Pakt mit dem Zamomin abgeschlossen. Du erhältst eine Starterspindel deiner Wahl, ohne CP dafür zu zahlen.\n\nDas Zamomin hält sich vor dir weniger zurück: Wenn du einen Zauber einsetzt und er fehlschlägt, verbrauchst du zwei Fatigue Points.\n\nDu kannst diesen Nachteil aufheben, indem du 20 CP bezahlst.\n\n",
+    cp: 0,
+    tags: ["Nachteil", "Meta"],
+  },
+  {
+    id: "insomnie",
+    name: "Insomnie",
+    description:
+      "Bei jedem Schlaf: Selbstkontrollecheck gegen HT. Wenn nicht bestanden: Dein Charakter wird keine Ruhe finden und übermüdet in den nächsten Tag starten. -2 auf Testwürfe für die erste Hälfte des Tages.\n\n",
+    cp: -15,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "legale-sucht",
+    name: "Legale Sucht",
+    description:
+      "Du bist süchtig nach einer legalen Droge. Du musst diese Droge täglich zu dir nehmen, ansonsten erhältst du pro Tag einen -1 Modifier auf alle mentalen Checks (bis maximal -8).\n\n",
+    cp: -10,
+    tags: ["Nachteil", "Meta"],
+  },
+  {
+    id: "illegale-sucht",
+    name: "Illegale Sucht",
+    description:
+      "Du bist süchtig nach einer illegalen Droge. Du musst diese Droge täglich zu dir nehmen, ansonsten erhältst du pro Tag einen -1 Modifier auf alle mentalen Checks (bis maximal -8).\n\nIllegale Drogen sind teurer und schwerer zu erwerben. Der Besitz ist strafbar und wird je nachdem wo du aktuell bist mehr oder weniger verfolgt.\n\n",
+    cp: -20,
+    tags: ["Nachteil", "Meta"],
+  },
+  {
+    id: "amnesie",
+    name: "Amnesie",
+    description:
+      "Du (der Spieler) siehst dein Character-Sheet, aber der GM hat insgeheim zusätzlich bis zu 30 CP an vor dir geheim gehaltenen Nachteilen ausgesucht (die du als zusätzliche CP erhältst). Der GM wird dir mitteilen, wenn einer der Nachteile einen Effekt auf dich hat, aber du weißt nicht warum.\n\nDu weißt was du kannst, du weißt nicht woher. Du hast wahrscheinlich Freunde und Feinde, aber keine Ahnung wer das ist.\n\nDein Charakter kann sich nur an die Zeit nach Auftreten der Amnesie erinnern.\n\n",
+    cp: -15,
+    tags: ["Nachteil", "Geistlich"],
+  },
+  {
+    id: "schlechter-griff",
+    name: "Schlechter Griff",
+    description:
+      "Pro Level -1 Modifier auf alle Checks bei denen ein zuverlässiger Griff gebraucht wird (führen einer Nahkampfwaffe, Klettern, Fangen, ...). Bonus: 5 CP/Level.\n\n",
+    cp: -5,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "stinkt",
+    name: "Stinkt",
+    description:
+      "Erhalte -2 Modifier auf Reaktionswürfe von NPCs, anderen PCs und den meisten Tieren. Du kannst den Gestank mit Parfümen überdecken, aber die Menge an Parfüm die dafür notwendig ist überfordert die Nasen genauso wie der Gestank selbst.\n\n",
+    cp: -10,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "temperament",
+    name: "Temperament",
+    description:
+      "Du kannst deine Emotionen nicht gut kontrollieren. In einer stressvollen Situation: Selbstkontrollecheck gegen HT. Wenn fehlgeschlagen, muss dein Charakter ausrasten (beleidigen, angreifen, ...).\n\n",
+    cp: -10,
+    tags: ["Nachteil", "Geistlich"],
+  },
+  {
+    id: "legally-blind",
+    name: "Legally Blind",
+    description:
+      "Nicht kombinierbar mit anderen Sehkraft-Vor-/Nachteilen. Du kannst NICHT sehen. -4 auf alle Kampfskills, sehspezifische Checks gelten automatisch als kritischer Fehlschlag.\n\n",
+    cp: -50,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "bestialisch",
+    name: "Bestialisch",
+    description:
+      'Charakter denkt und agiert wie ein wildes Tier. Hat kein Konzept von Zivilisation, Manieren, Moral. Instinkte führen in Kampfsituationen immer zu entweder Kämpfen oder Fliehen - Strategie muss bei Übernahme festgelegt werden. Kann keine Skills lernen, die nach Meinung des GMs zu "zivilisiert" sind.\n\n',
+    cp: -20,
+    tags: ["Nachteil", "Geistlich"],
+  },
+  {
+    id: "lernresistenz",
+    name: "Lernresistenz",
+    description:
+      "Du kannst CP nicht für das Erhöhen von IQ ausgeben. Bei der Charaktererstellung einmalig bis zu 1 Level absenkbar. Danach ist IQ unveränderlich, solange du diesen Nachteil hast.\n\n",
+    cp: -30,
+    tags: ["Nachteil", "Geistlich"],
+  },
+  {
+    id: "artikulatorische-schwierigkeiten",
+    name: "Artikulatorische Schwierigkeiten",
+    description:
+      "Du bist dazu fähig Geräusche mit deinem Mund zu machen (z.B. Bellen, Grollen, Summen, ...), dein Gehirn ist aber nicht in der Lage tatsächliche intelligente Sprache hervorzubringen. Du kannst Sprachen die du gelernt hast weiterhin verstehen.\n\n",
+    cp: -15,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "farbblind",
+    name: "Farbblind",
+    description:
+      "KOMPLETTE Farbblindheit - der Charakter sieht nur in Schwarz/Weiß.\n\n",
+    cp: -10,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "langsamkeit",
+    name: "Langsamkeit",
+    description:
+      "Deine subjektive Zeit ist halb so schnell wie die aller anderen - was für andere zwei Sekunden sind, fühlt sich für dich an wie eine. -3 auf zeitkritische Würfe (z.B. Ausweichen).\n\n",
+    cp: -35,
+    tags: ["Nachteil", "Körperlich"],
+  },
+  {
+    id: "kleptomanie",
+    name: "Kleptomanie",
+    description:
+      "Du hast den Drang zu stehlen. Jedes Mal wenn sich die Möglichkeit eines Diebstahls ergibt: Selbstkontrollcheck gegen Wille mit Modifier 0 bis -3 je nach Wert des Items. Falls fehlgeschlagen: Du musst versuchen zu stehlen.\n\n",
+    cp: -20,
+    tags: ["Nachteil", "Geistlich"],
+  },
 ];
 
 // -- Character Prebuilds ---------------------------------------------------

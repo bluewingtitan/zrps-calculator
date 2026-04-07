@@ -90,6 +90,23 @@ function tc(s: string): string {
     .replace(/\r?\n/g, " "); // remaining newlines → space
 }
 
+/**
+ * Like tc(), but preserves newlines as Typst hard line breaks (`\ `).
+ * Use this for multi-line description fields.
+ */
+function tcml(s: string): string {
+  return s
+    .replace(/\\/g, "\\\\")
+    .replace(/#/g, "\\#")
+    .replace(/\$/g, "\\$")
+    .replace(/\*/g, "\\*")
+    .replace(/_/g, "\\_")
+    .replace(/@/g, "\\@")
+    .replace(/`/g, "\\`")
+    .replace(/~/g, "\\~")
+    .replace(/\r?\n+/g, "\\ "); // newlines → Typst hard line break
+}
+
 // ── Typst source builder ──────────────────────────────────────────────────
 
 function buildTypstSource(
@@ -279,7 +296,7 @@ function buildTypstSource(
   const abilitiesItems = s.specialAbilities
     .map((a) => {
       const desc = a.description
-        ? `#linebreak()#text(8pt, fill: luma(120))[${tc(a.description)}]`
+        ? `#linebreak()#text(8pt, fill: luma(120))[${tcml(a.description)}]`
         : "";
       return `      #pad(x: 0.5em, y: 0.4em)[#text(weight: "bold")[${tc(a.name)}]${desc}]`;
     })
@@ -289,36 +306,29 @@ function buildTypstSource(
   const traitsItems = s.traits
     .map((t) => {
       const desc = t.description
-        ? `#linebreak()#text(8pt, fill: luma(120))[${tc(t.description)}]`
+        ? `#linebreak()#text(8pt, fill: luma(120))[${tcml(t.description)}]`
         : "";
       return `      #pad(x: 0.5em, y: 0.4em)[#text(weight: "bold")[${tc(t.name)}]${desc}]`;
     })
     .join("\n      #line(length: 100%, stroke: 0.4pt + luma(210))\n");
 
   /* ---------- bottom two-column layout ------------------------------ */
-  // Left: empty Inventory card filling the height of the right column.
-  // Right: Skills → Sonderfähigkeiten → Vor- & Nachteile stacked vertically.
+  // Left: Sonderfähigkeiten. Right: Skills → Vor- & Nachteile stacked vertically.
   const bottomLayout = `// ── Bottom layout ─────────────────────────────────────────────────
 #v(0.9em)
 #grid(
   columns: (1fr, 1fr),
   gutter: 0.7em,
-  // ── Inventory (fills height of right column) ──────────────────
-  rect(
-    width: 100%, inset: 0pt,
-    stroke: 0.65pt + luma(80), radius: 5pt,
-  )[
+  // ── Special Abilities (left column) ──────────────────────────
+  ${
+    s.specialAbilities.length > 0
+      ? `section-box("Sonderfähigkeiten")[
     #set block(spacing: 0pt)
-    #rect(
-      width: 100%, fill: luma(55), inset: (y: 0.3em),
-      radius: (top-left: 4pt, top-right: 4pt,
-               bottom-left: 0pt, bottom-right: 0pt),
-    )[
-      #align(center)[#text(7pt, fill: white, weight: "bold")[INVENTAR]]
-    ]
-    #v(9cm)
-  ],
-  // ── Skills + Special Abilities + Traits ───────────────────────
+${abilitiesItems}
+  ]`
+      : `[]`
+  },
+  // ── Skills + Traits (right column) ───────────────────────────
   [
     ${
       s.skills.length > 0
@@ -328,16 +338,7 @@ ${skillsItems}
     ]`
         : ""
     }
-    ${s.skills.length > 0 && s.specialAbilities.length > 0 ? "#v(0.7em)" : ""}
-    ${
-      s.specialAbilities.length > 0
-        ? `#section-box("Sonderfähigkeiten")[
-      #set block(spacing: 0pt)
-${abilitiesItems}
-    ]`
-        : ""
-    }
-    ${(s.skills.length > 0 || s.specialAbilities.length > 0) && s.traits.length > 0 ? "#v(0.7em)" : ""}
+    ${s.skills.length > 0 && s.traits.length > 0 ? "#v(0.7em)" : ""}
     ${
       s.traits.length > 0
         ? `#section-box("Vor- & Nachteile")[

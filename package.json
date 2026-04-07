@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "vite --config vite.config.local.ts",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@myriaddreamin/typst-ts-web-compiler": "0.7.0-rc2",
+    "@myriaddreamin/typst.ts": "0.7.0-rc2",
     "@phosphor-icons/vue": "^2.2.1",
     "@tailwindcss/vite": "^4.2.2",
     "@vueuse/core": "^14.2.1",

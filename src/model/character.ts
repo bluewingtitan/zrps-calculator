@@ -25,6 +25,7 @@ export interface SkillDefinition {
 export interface TraitDefinition {
   name: string;
   cp: number; // positive = Vorteil cost, negative = Nachteil (refund)
+  description?: string;
 }
 
 export type SpecialAbilityDefinition = TraitDefinition;
@@ -279,7 +280,6 @@ export interface CharacterData {
   perAdd: number;
   fpAdd: number;
   basicMoveAdd: number;
-  magicAdd: number;
 
   level: number;
   baseCp: number; // base CP at character creation (campaign-specific)
@@ -290,7 +290,7 @@ export interface CharacterData {
   wealthLevelKey: string; // key into WEALTH_LEVELS
 }
 
-export const MODEL_VERSION = 4;
+export const MODEL_VERSION = 5;
 
 export function defaultSkills(): SkillDefinition[] {
   return [
@@ -320,6 +320,13 @@ export function defaultSkills(): SkillDefinition[] {
       name: "Fernkampf",
       boundAttribute: "DX",
       hardness: 1,
+      currentLevel: 0,
+      active: false,
+    },
+    {
+      name: "Magie",
+      boundAttribute: "IQ",
+      hardness: 2,
       currentLevel: 0,
       active: false,
     },
@@ -447,7 +454,6 @@ export function defaultCharacter(
     perAdd: 0,
     fpAdd: 0,
     basicMoveAdd: 0,
-    magicAdd: 0,
     level: 1,
     baseCp: 150,
     cpPerLevel: 15,
@@ -478,6 +484,16 @@ export function migrateCharacter(data: CharacterData): CharacterData {
     if (!(data as CharacterData).baseCp) (data as CharacterData).baseCp = 150;
     if (!(data as CharacterData).cpPerLevel)
       (data as CharacterData).cpPerLevel = 15;
+  }
+  if (data.modelVersion < 5) {
+    data.modelVersion = 5;
+    data.skills.push({
+      name: "Magie",
+      boundAttribute: "IQ",
+      hardness: 2,
+      currentLevel: 0,
+      active: false,
+    });
   }
   return data;
 }

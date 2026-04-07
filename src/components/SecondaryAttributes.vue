@@ -18,8 +18,7 @@ const totalCp = computed(
     (store.willAdd ?? 0) * 5 +
     (store.perAdd ?? 0) * 5 +
     (store.fpAdd ?? 0) * 3 +
-    (store.basicMoveAdd ?? 0) * 5 +
-    (store.magicAdd ?? 0) * 10,
+    (store.basicMoveAdd ?? 0) * 5
 );
 </script>
 
@@ -77,14 +76,6 @@ const totalCp = computed(
           v-model="store.basicMoveAdd"
           :cpPerStep="5"
           :base="bmBase"
-        />
-        <AttrCounter
-          label="Magie (MG)"
-          description="10 CP / Level · Basis = IQ×0.65↓"
-          v-model="store.magicAdd"
-          :cpPerStep="10"
-          :base="magicBase"
-          :min="0"
         />
       </div>
     </div>

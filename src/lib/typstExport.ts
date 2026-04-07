@@ -267,11 +267,6 @@ function buildTypstSource(
   stat-bubble("WAH", ${s.per}),
 )`;
 
-  /* ---------- wealth ------------------------------------------------- */
-  const wealthSection = s.wealthLabel
-    ? `#v(0.7em)\n#section-title("Wohlstand")\n#text(11pt, weight: "bold")[${tc(s.wealthLabel)}]`
-    : "";
-
   /* ---------- skills box items --------------------------------------- */
   const skillsItems = s.skills
     .map(
@@ -374,7 +369,6 @@ ${sectionBox}
 ${topSection}
 
 ${attrsModule}
-${wealthSection}
 ${bottomLayout}
 `;
 }

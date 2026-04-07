@@ -56,6 +56,8 @@ const pdfSnapshot = computed<CharacterPdfSnapshot>(() => ({
     wealthLevel.value && wealthLevel.value.key !== "0"
       ? wealthLevel.value.label
       : undefined,
+  cpUsed: model.availableCp - model.usedCp,
+  cpTotal: model.availableCp,
   skills: activeSkills.value.map((s) => ({ name: s.name, level: s.currentLevel })),
   traits: model.traits.map((t) => ({ name: t.name, cp: t.cp, description: t.description })),
   specialAbilities: model.specialAbilities.map((a) => ({
@@ -173,11 +175,11 @@ async function handleExportPdf() {
               <table class="w-full text-center border-collapse">
                 <thead>
                   <tr>
-                    <th class="attr-th">LP</th>
+                    <th class="attr-th">HP</th>
                     <th class="attr-th">WIL</th>
-                    <th class="attr-th">WAH</th>
-                    <th class="attr-th">AU</th>
-                    <th class="attr-th">BEW</th>
+                    <th class="attr-th">PER</th>
+                    <th class="attr-th">FP</th>
+                    <th class="attr-th">BM</th>
                   </tr>
                 </thead>
                 <tbody>

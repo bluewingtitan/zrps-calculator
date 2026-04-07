@@ -290,7 +290,7 @@ export interface CharacterData {
   wealthLevelKey: string; // key into WEALTH_LEVELS
 }
 
-export const MODEL_VERSION = 4;
+export const MODEL_VERSION = 5;
 
 export function defaultSkills(): SkillDefinition[] {
   return [

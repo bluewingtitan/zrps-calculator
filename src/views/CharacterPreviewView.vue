@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useCharactersStore } from "@/stores/characters";
 import { useModelStore } from "@/stores/model";
 import { WEALTH_LEVELS } from "@/model/character";
-import { PhArrowLeft, PhPencilSimple } from "@phosphor-icons/vue";
+import { PhArrowLeft, PhPencilSimple, PhFilePdf } from "@phosphor-icons/vue";
+import { exportCharacterPdf } from "@/lib/typstExport";
+import type { CharacterPdfSnapshot } from "@/lib/typstExport";
 
 const route = useRoute();
 const router = useRouter();
@@ -33,7 +35,47 @@ const activeSkills = computed(() =>
 
 const basicMoveRounded = computed(() => Math.round(model.basicMove));
 
-</script>
+// ── PDF export ────────────────────────────────────────────────────────────
+
+const pdfExporting = ref(false);
+const pdfError = ref<string | null>(null);
+
+const pdfSnapshot = computed<CharacterPdfSnapshot>(() => ({
+  name: chars.workingCopy?.name ?? "",
+  level: model.level ?? 1,
+  st: model.st ?? 10,
+  dx: model.dx ?? 10,
+  iq: model.iq ?? 10,
+  ht: model.ht ?? 10,
+  hp: model.hp,
+  will: model.will,
+  per: model.per,
+  fp: model.fp,
+  basicMove: model.basicMove,
+  wealthLabel:
+    wealthLevel.value && wealthLevel.value.key !== "0"
+      ? wealthLevel.value.label
+      : undefined,
+  skills: activeSkills.value.map((s) => ({ name: s.name, level: s.currentLevel })),
+  traits: model.traits.map((t) => ({ name: t.name, cp: t.cp, description: t.description })),
+  specialAbilities: model.specialAbilities.map((a) => ({
+    name: a.name,
+    description: a.description,
+  })),
+}));
+
+async function handleExportPdf() {
+  if (pdfExporting.value) return;
+  pdfExporting.value = true;
+  pdfError.value = null;
+  try {
+    await exportCharacterPdf(pdfSnapshot.value);
+  } catch (e) {
+    pdfError.value = e instanceof Error ? e.message : "Fehler beim PDF-Export.";
+  } finally {
+    pdfExporting.value = false;
+  }
+}</script>
 
 <template>
   <div class="min-h-screen bg-base-300 pb-16 print:bg-white">
@@ -60,6 +102,27 @@ const basicMoveRounded = computed(() => Math.round(model.basicMove));
             <PhPencilSimple :size="14" />
             Bearbeiten
           </button>
+          <button
+            class="btn btn-xs btn-outline gap-1.5"
+            :class="{ 'btn-disabled': pdfExporting }"
+            :disabled="pdfExporting"
+            @click="handleExportPdf"
+            title="Charakterbogen als PDF exportieren (Typst WASM)"
+          >
+            <span v-if="pdfExporting" class="loading loading-spinner loading-xs" />
+            <PhFilePdf v-else :size="14" />
+            PDF
+          </button>
+        </div>
+      </div>
+      <!-- PDF error toast (hidden in print) -->
+      <div
+        v-if="pdfError"
+        class="max-w-2xl mx-auto px-4 pt-3 print:hidden"
+      >
+        <div class="alert alert-error text-sm flex items-start gap-2">
+          <span class="flex-1">{{ pdfError }}</span>
+          <button class="btn btn-xs btn-circle btn-ghost" @click="pdfError = null">✕</button>
         </div>
       </div>
 

@@ -32,7 +32,6 @@ export const useModelStore = defineStore("model", () => {
   const perAdd = field("perAdd");
   const fpAdd = field("fpAdd");
   const basicMoveAdd = field("basicMoveAdd");
-  const magicAdd = field("magicAdd");
   const level = field("level");
   const name = field("name");
   const wealthLevelKey = field("wealthLevelKey");
@@ -47,9 +46,6 @@ export const useModelStore = defineStore("model", () => {
   const fp = computed(() => (ht.value ?? 10) + (fpAdd.value ?? 0));
   const basicMove = computed(
     () => ((ht.value ?? 10) + (dx.value ?? 10)) / 4 + (basicMoveAdd.value ?? 0),
-  );
-  const magic = computed(
-    () => Math.floor((iq.value ?? 10) * 0.65) + (magicAdd.value ?? 0),
   );
 
   // Collection refs — in-place mutations (push/splice/assignment) are reactive
@@ -75,7 +71,6 @@ export const useModelStore = defineStore("model", () => {
     total += (perAdd.value ?? 0) * 5;
     total += (fpAdd.value ?? 0) * 3;
     total += (basicMoveAdd.value ?? 0) * 5;
-    total += (magicAdd.value ?? 0) * 10;
     for (const trait of traits.value) total += trait.cp ?? 0;
     for (const sa of specialAbilities.value) total += sa.cp ?? 0;
     // Wealth
@@ -113,8 +108,6 @@ export const useModelStore = defineStore("model", () => {
         return fp.value;
       case "BasicMove":
         return basicMove.value;
-      case "Magic":
-        return magic.value;
       default:
         throw new Error(`Unknown attribute: ${attribute}`);
     }
@@ -246,8 +239,6 @@ export const useModelStore = defineStore("model", () => {
     fp,
     basicMoveAdd,
     basicMove,
-    magicAdd,
-    magic,
     level,
     skills,
     traits,

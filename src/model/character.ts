@@ -290,7 +290,7 @@ export const SPECIAL_ABILITY_PRESETS: CpEntryPreset[] = [
     id: "tierfluesterer",
     name: "Tierflüsterer",
     description:
-      "Typ: Aktion\n\nDu kannst mit Tieren in einfachen Bildern, Impulsen und Gefühlen kommunizieren — Hunger, Gefahr, Richtung, Personen-Eindruck, Revier. Test auf Naturkunde.\n\nVoraussetzung: Naturkunde 9+",
+      "Typ: Aktion\n\nDu kannst mit Tieren in einfachen Bildern, Impulsen und Gefühlen kommunizieren - Hunger, Gefahr, Richtung, Personen-Eindruck, Revier. Test auf Naturkunde.\n\nVoraussetzung: Naturkunde 9+",
     cp: 6,
     tags: ["Talente", "Aktion"],
   },
@@ -524,7 +524,7 @@ export const SPECIAL_ABILITY_PRESETS: CpEntryPreset[] = [
     id: "flimmerpforte",
     name: "Flimmerpforte",
     description:
-      "Typ: Magie (Aktion)\n\nErschaffe ein instabiles Portal zwischen zwei Punkten in deinem Sichtfeld. Zu Beginn jedes Zuges: Test auf Magie — bei Fehlschlag fällt das Portal zusammen. Ein kritischer Erfolg überspringt den nächsten Test. (6 Zamomin)\n\nVoraussetzung: Magie 13+",
+      "Typ: Magie (Aktion)\n\nErschaffe ein instabiles Portal zwischen zwei Punkten in deinem Sichtfeld. Zu Beginn jedes Zuges: Test auf Magie - bei Fehlschlag fällt das Portal zusammen. Ein kritischer Erfolg überspringt den nächsten Test. (6 Zamomin)\n\nVoraussetzung: Magie 13+",
     cp: 12,
     tags: ["Magie", "Talente", "Aktion"],
   },
@@ -568,7 +568,7 @@ export const TRAITS_PRESETS: CpEntryPreset[] = [
     id: "katze",
     name: "Katze",
     description:
-      "Der Character landet immer auf den Füßen. Bei einem Sturz: DX-Check — kein Fallschaden bei Erfolg, halber Fallschaden bei Fehlschlag. Kritischer Fehlschlag: voller Schaden.",
+      "Der Character landet immer auf den Füßen. Bei einem Sturz: DX-Check - kein Fallschaden bei Erfolg, halber Fallschaden bei Fehlschlag. Kritischer Fehlschlag: voller Schaden.",
     cp: 10,
     tags: ["Vorteil", "Körperlich"],
   },
@@ -640,7 +640,7 @@ export const TRAITS_PRESETS: CpEntryPreset[] = [
     id: "absolute-timing",
     name: "Absolute Timing",
     description:
-      "Du weißt immer, wie viel Uhr es ist — mit höchstens 5 Minuten Abweichung.",
+      "Du weißt immer, wie viel Uhr es ist - mit höchstens 5 Minuten Abweichung.",
     cp: 2,
     tags: ["Vorteil", "Geistlich"],
   },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useModelStore } from "@/stores/model";
 import { useCharactersStore } from "@/stores/characters";
 import {
@@ -9,14 +9,19 @@ import {
   PhArrowLeft,
   PhFloppyDisk,
   PhTrash,
+  PhEye,
 } from "@phosphor-icons/vue";
 
 const store = useModelStore();
 const chars = useCharactersStore();
 const router = useRouter();
+const route = useRoute();
 
 const remaining = computed(() => store.availableCp - store.usedCp);
 const showConfirm = ref(false);
+// Where to navigate after the confirm dialog resolves
+type Destination = "list" | "preview";
+const pendingDestination = ref<Destination>("list");
 
 function decLevel() {
   if ((store.level ?? 1) > 1) store.level = (store.level ?? 1) - 1;
@@ -25,25 +30,40 @@ function incLevel() {
   store.level = (store.level ?? 1) + 1;
 }
 
-function handleBack() {
-  if (chars.isDirty) {
-    showConfirm.value = true;
+function navigateTo(dest: Destination) {
+  if (dest === "preview") {
+    router.push({ name: "preview", params: { id: route.params.id } });
   } else {
     chars.unload();
     router.push({ name: "list" });
   }
 }
+
+function handleBack() {
+  if (chars.isDirty) {
+    pendingDestination.value = "list";
+    showConfirm.value = true;
+  } else {
+    navigateTo("list");
+  }
+}
+function handlePreview() {
+  if (chars.isDirty) {
+    pendingDestination.value = "preview";
+    showConfirm.value = true;
+  } else {
+    navigateTo("preview");
+  }
+}
 function confirmSave() {
   store.lockAndSave();
   showConfirm.value = false;
-  chars.unload();
-  router.push({ name: "list" });
+  navigateTo(pendingDestination.value);
 }
 function confirmDiscard() {
   chars.discardChanges();
   showConfirm.value = false;
-  chars.unload();
-  router.push({ name: "list" });
+  navigateTo(pendingDestination.value);
 }
 function cancelConfirm() {
   showConfirm.value = false;
@@ -113,6 +133,15 @@ function cancelConfirm() {
           :max="store.availableCp"
         ></progress>
       </div>
+
+      <!-- Preview button -->
+      <button
+        class="btn btn-xs btn-ghost gap-1.5 shrink-0"
+        @click="handlePreview"
+      >
+        <PhEye :size="14" />
+        <span class="hidden sm:inline">Vorschau</span>
+      </button>
     </div>
   </div>
 

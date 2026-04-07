@@ -25,6 +25,7 @@ export interface SkillDefinition {
 export interface TraitDefinition {
   name: string;
   cp: number; // positive = Vorteil cost, negative = Nachteil (refund)
+  description?: string;
 }
 
 export type SpecialAbilityDefinition = TraitDefinition;

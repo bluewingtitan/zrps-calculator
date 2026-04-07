@@ -5,7 +5,7 @@ import { PhPlus, PhTrash, PhDotsSixVertical } from "@phosphor-icons/vue";
 const props = defineProps<{
   title: string;
   emptyText: string;
-  items: Array<{ name: string; cp: number }>;
+  items: Array<{ name: string; cp: number; description?: string }>;
 }>();
 
 const totalCp = computed(() =>
@@ -13,7 +13,7 @@ const totalCp = computed(() =>
 );
 
 function addItem() {
-  props.items.push({ name: "", cp: 0 });
+  props.items.push({ name: "", cp: 0, description: "" });
 }
 
 function removeItem(idx: number) {
@@ -126,58 +126,72 @@ function onDragEnd() {
           />
           <div
             data-drag-row
-            class="flex items-center gap-2 py-2 transition-opacity select-none"
+            class="transition-opacity py-2"
             :class="{ 'opacity-30': dragSrcIdx === idx }"
             draggable="true"
             @dragstart="onDragStart(idx, $event)"
             @dragend="onDragEnd"
           >
-            <!-- Drag handle -->
-            <span
-              class="cursor-grab active:cursor-grabbing text-base-content/30 hover:text-base-content/60 shrink-0 transition-colors"
-            >
-              <PhDotsSixVertical :size="16" />
-            </span>
+            <!-- Main row: handle + name + cp + delete -->
+            <div class="flex items-center gap-2 select-none">
+              <!-- Drag handle -->
+              <span
+                class="cursor-grab active:cursor-grabbing text-base-content/30 hover:text-base-content/60 shrink-0 transition-colors"
+              >
+                <PhDotsSixVertical :size="16" />
+              </span>
 
-            <!-- Name -->
-            <input
-              type="text"
-              class="input input-sm flex-1 min-w-0"
-              placeholder="Name…"
-              v-model="item.name"
-              draggable="false"
-            />
-
-            <!-- CP input -->
-            <div class="relative shrink-0 w-24">
+              <!-- Name -->
               <input
-                type="number"
-                class="input input-sm w-full pr-8 text-right font-mono"
-                :class="
-                  item.cp < 0
-                    ? 'text-success'
-                    : item.cp > 0
-                      ? 'text-warning'
-                      : ''
-                "
-                :value="item.cp"
-                @input="onCpInput(idx, $event)"
-                placeholder="0"
+                type="text"
+                class="input input-sm flex-1 min-w-0"
+                placeholder="Name…"
+                v-model="item.name"
                 draggable="false"
               />
-              <span
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-base-content/40 pointer-events-none"
-                >CP</span
+
+              <!-- CP input -->
+              <div class="relative shrink-0 w-24">
+                <input
+                  type="number"
+                  class="input input-sm w-full pr-8 text-right font-mono"
+                  :class="
+                    item.cp < 0
+                      ? 'text-success'
+                      : item.cp > 0
+                        ? 'text-warning'
+                        : ''
+                  "
+                  :value="item.cp"
+                  @input="onCpInput(idx, $event)"
+                  placeholder="0"
+                  draggable="false"
+                />
+                <span
+                  class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-base-content/40 pointer-events-none"
+                  >CP</span
+                >
+              </div>
+
+              <!-- Remove -->
+              <button
+                class="btn btn-xs btn-ghost btn-circle text-error shrink-0"
+                @click="removeItem(idx)"
               >
+                <PhTrash :size="14" />
+              </button>
             </div>
 
-            <!-- Remove -->
-            <button
-              class="btn btn-xs btn-ghost btn-circle text-error shrink-0"
-              @click="removeItem(idx)"
-            >
-              <PhTrash :size="14" />
-            </button>
+            <!-- Description -->
+            <textarea
+              class="textarea textarea-sm w-full mt-1.5 ml-6 text-xs resize-none leading-snug"
+              style="width: calc(100% - 1.5rem)"
+              rows="2"
+              placeholder="Beschreibung…"
+              v-model="item.description"
+              draggable="false"
+              @dragstart.stop
+            />
           </div>
         </template>
 

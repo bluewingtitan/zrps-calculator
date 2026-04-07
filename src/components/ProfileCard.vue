@@ -41,7 +41,7 @@ function incLevel() {
 <template>
   <div class="card bg-base-200 shadow">
     <div class="card-body gap-0 p-4">
-      <h2 class="card-title text-base mb-3">Profil</h2>
+      <h2 class="card-title text-base mb-3">Steckbrief</h2>
 
       <div class="flex gap-3">
         <!-- Portrait area -->
